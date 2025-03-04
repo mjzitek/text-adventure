@@ -1,0 +1,13 @@
+Create an engaging character for a story about a futuristic post-apocalyptic climate disaster world.  The story takes place approximately 5 years after the disaster took place.  Create a brief backstory and description of the character.
+
+Character Name: {name}
+Character Gender: {gender}
+Character Profession:  {background}
+Character Traits: {traits}
+
+Give me the following output:
+- Full Name
+   -- Examples:  Bob "Flint" Mitchell, Alice Smith, Jon Luis Garcia, etc.
+- Age: Pick an appropriate age based on the profession
+- Appearance:  A brief description of the characters appearance
+- Backstory: A few sentences describing their backstory
