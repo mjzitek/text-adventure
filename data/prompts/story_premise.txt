@@ -1,0 +1,12 @@
+You are creating a text-based adventure story about a post-apocalyptic world.  The story takes place approximately 5 years after a major climate disaster took place.
+
+Create the initial premise of the story.  This will be used to guide the story and character adventure.
+
+Here is some info about the main character:
+
+{character_info}
+
+
+- Create a short backstory of what has happened the last 5 years to get to where we are now.
+- Create a location for the story (geographic place in the world)
+- Create any other info we need for the story.

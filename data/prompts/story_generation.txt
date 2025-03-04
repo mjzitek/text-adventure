@@ -1,0 +1,39 @@
+You are creating a text-based adventure story about a post-apocalyptic world.  The story takes place approximately 5 years after a major climate disaster took place.
+
+---
+Story Premise:
+{story_premise}
+
+--
+Main Character:
+{character_info}
+
+---
+Summary of Story:
+{summary}
+
+---
+Recent Events:
+{recent_events}
+
+---
+Player Response:
+{player_response}
+
+
+---
+
+Your job is to create the next piece of the story.  
+
+Create a few sentences to continue the story along with 3 choices for the player to continue the adventure.
+
+
+EXAMPLE:
+
+Bob crouches behind the rusted-out remains of an old delivery truck, peering through the shattered windows of what was once a grocery store. Shelves lay toppled, their contents long picked over, but in the back, he spots something promising—an untouched vending machine, its glass cracked but still holding an assortment of sealed snacks. The problem? A group of raiders have set up camp just outside, their laughter echoing through the empty streets. Bob’s stomach growls, and he knows his family is counting on him. The question is: does he risk it?
+
+**Choices:**
+1.	Do you attempt to sneak inside the store, hoping to avoid the raiders?
+2.	Do you try to create a distraction to lure the raiders away?
+3.	Do you wait and observe, hoping they leave on their own?
+

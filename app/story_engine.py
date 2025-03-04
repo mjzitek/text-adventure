@@ -34,17 +34,14 @@ class StoryEngine:
         self.current_game_id = player.get('game_id')
         self.current_round = 1
         
-        # Get the initial story prompt
-        template_path = Path(os.path.dirname(os.path.abspath(__file__))).parent / "data" / "prompts" / "story_generation.txt"
+        premise_template_path = Path(os.path.dirname(os.path.abspath(__file__))).parent / "data" / "prompts" / "story_premise.txt"
+        story_template_path = Path(os.path.dirname(os.path.abspath(__file__))).parent / "data" / "prompts" / "story_generation.txt"
+        
         
         # Generate the opening scenario
-        opening = self.llm_client.generate_story_segment(
+        opening = self.llm_client.generate_story_premise(
             player.get('description', ''),
-            "Starting your journey in the wasteland.",
-            [],  # No recent events yet
-            [],  # No NPCs yet
-            "begin the adventure",
-            template_path if template_path.exists() else None
+            premise_template_path if premise_template_path.exists() else None
         )
         
         # Update game state

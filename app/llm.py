@@ -77,6 +77,28 @@ class LLMClient:
         
         return self.generate_text(prompt, system_prompt)
     
+    def generate_story_premise(self, character_info, template_path=None):
+        """Generate a story premise."""
+        template = ""
+        
+        print(template_path)
+        if template_path and Path(template_path).exists():
+            with open(template_path, 'r') as f:
+                template = f.read()
+        else:
+            template = ""
+    
+
+        print(template)
+        print('-0--')
+        prompt = template.format(
+            character_info=character_info
+        )
+
+        system_prompt = "You are a writer who is an expert and creating engaging stories"
+        
+        return self.generate_text(prompt, system_prompt, temperature=0.7, max_tokens=2000) 
+
     def generate_story_segment(self, character_description, current_situation, 
                               recent_events, npc_relationships, player_action, 
                               template_path=None):
