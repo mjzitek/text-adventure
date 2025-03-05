@@ -32,9 +32,9 @@ class LLMClient:
         retry_delay = 2
 
         # Debugging
-        print('=' * 40)
-        print(messages)
-        print('=' * 40)
+        # print('=' * 40)
+        # print(messages)
+        # print('=' * 40)
         
         for attempt in range(max_retries):
             try:
@@ -46,11 +46,11 @@ class LLMClient:
                 )
                 
                 # Debugging
-                print('\n\n')
-                print('*' * 40)
-                print(response.choices[0].message.content)
-                print('*' * 40)
-                print('\n\n')
+                # print('\n\n')
+                # print('*' * 40)
+                # print(response.choices[0].message.content)
+                # print('*' * 40)
+                # print('\n\n')
                 
                 return response.choices[0].message.content
             
@@ -79,7 +79,7 @@ class LLMClient:
             background=background,
             traits=traits
         )
-        print(prompt)
+        #print(prompt)
         
         system_prompt = "You are a writer who is an expert and creating engaging stories"
         
@@ -109,10 +109,10 @@ class LLMClient:
                               template_path=None):
         """Summarize the story."""
         template = ""
-        print("+ Summarize the story. +")
+        #print("+ Summarize the story. +")
         
         if template_path and isinstance(template_path, str) and Path(template_path).exists():
-            print("+ Template path exists. +")
+            #print("+ Template path exists. +")
             with open(template_path, 'r') as f:
                 template = f.read()
         else:
@@ -140,10 +140,12 @@ Latest Player Action:
 Create a comprehensive summary of the story so far:
 """
 
-        # Format recent events
+        # Format recent events - reverse the order to get chronological order (oldest first)
         events_text = ""
         if recent_events:
-            for event in recent_events:
+            # Reverse the events list to get chronological order (oldest first)
+            chronological_events = sorted(recent_events, key=lambda x: x.get('round', 0))
+            for event in chronological_events:
                 # Make sure we're handling dictionary items properly
                 round_num = event.get('round', 'unknown')
                 description = event.get('description', '')
@@ -189,23 +191,23 @@ Create a comprehensive summary of the story so far:
                               template_path=None):
         """Generate a story segment."""
         template = ""
-        print("+ Generate a story segment. +")
-        print ("+ Story premise: " + story_premise[:30] if story_premise else "") # First 10 chars or empty string
-        print ("+ Character info: " + character_description[:30] if character_description else "") # First 10 chars or empty string
-        #print ("+ Current situation: " + current_situation[:10] if current_situation else "") # First 10 chars or empty string
+        # print("+ Generate a story segment. +")
+        # print ("+ Story premise: " + story_premise[:30] if story_premise else "") # First 10 chars or empty string
+        # print ("+ Character info: " + character_description[:30] if character_description else "") # First 10 chars or empty string
+        # #print ("+ Current situation: " + current_situation[:10] if current_situation else "") # First 10 chars or empty string
         
         # Properly handle arrays of dictionaries
-        if recent_events:
-            print(f"+ Recent events: {len(recent_events)} events")
-        else:
-            print("+ Recent events: None")
+        # if recent_events:
+        #     #print(f"+ Recent events: {len(recent_events)} events")
+        # else:
+        #     print("+ Recent events: None")
             
-        if npc_relationships:
-            print(f"+ NPC relationships: {len(npc_relationships)} NPCs")
-        else:
-            print("+ NPC relationships: None")
+        # if npc_relationships:
+        #     print(f"+ NPC relationships: {len(npc_relationships)} NPCs")
+        # else:
+        #     print("+ NPC relationships: None")
             
-        print ("+ Player action: " + player_action[:40] if player_action else "") # First 10 chars or empty string
+        # print ("+ Player action: " + player_action[:40] if player_action else "") # First 10 chars or empty string
         
         # Ensure template_path is a string
         if template_path and isinstance(template_path, str) and Path(template_path).exists():
@@ -217,7 +219,9 @@ Create a comprehensive summary of the story so far:
         # Format recent events
         events_text = ""
         if recent_events:
-            for event in recent_events:
+            # Sort events by round number to get chronological order (oldest first)
+            chronological_events = sorted(recent_events, key=lambda x: x.get('round', 0))
+            for event in chronological_events:
                 # Make sure we're handling dictionary items properly
                 round_num = event.get('round', 'unknown')
                 description = event.get('description', '')

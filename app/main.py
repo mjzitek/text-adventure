@@ -86,6 +86,10 @@ def main():
         # Check if game should end
         if result.get("end_game", False):
             game_active = False
+        # Skip to next iteration if the input was invalid
+        elif result.get("type") == "invalid_choice":
+            print(colored("Please enter 1, 2, or 3 to select one of the available choices.", YELLOW))
+            continue
     
     # End game
     story_engine.end_game(player)

@@ -3,6 +3,7 @@ Input handler module for the text adventure game.
 Processes player input and commands.
 """
 from text_formatter import bold, colored, underline, CYAN, GREEN, YELLOW, RED
+import re
 
 class InputHandler:
     """Handles player input and commands."""
@@ -24,6 +25,11 @@ class InputHandler:
             'quit': self._quit_game,
             'exit': self._quit_game
         }
+        # Flag to track if we're expecting a choice input (1, 2, or 3)
+        self.expecting_choice = True
+        
+        # Set the reference in the story engine
+        story_engine.set_input_handler(self)
     
     def process_input(self, user_input, player):
         """Process player input."""
@@ -33,11 +39,23 @@ class InputHandler:
         if command in self.commands:
             return self.commands[command](player)
         
+        # If we're expecting a choice and the input is not a valid choice (1, 2, or 3),
+        # prompt the user to enter a valid choice
+        if self.expecting_choice and not self._is_valid_choice(user_input):
+            return {"type": "invalid_choice"}
+        
         # If not a command, treat as a story action
+        # If it was a valid choice (1, 2, or 3), we'll pass just that number to the story engine
         return {
             "type": "story_action",
             "result": self.story_engine.process_action(user_input)
         }
+    
+    def _is_valid_choice(self, user_input):
+        """Check if the user input is a valid choice (1, 2, or 3)."""
+        # Strip whitespace and check if the input is exactly "1", "2", or "3"
+        stripped_input = user_input.strip()
+        return stripped_input in ["1", "2", "3"]
     
     def _show_inventory(self, player):
         """Show the player's inventory."""
@@ -66,7 +84,7 @@ class InputHandler:
         if not game_id:
             return {"type": "error", "result": colored("No active game.", RED)}
         
-        events = self.memory_manager.get_recent_events(game_id, 5)
+        events = self.memory_manager.get_recent_events(game_id, 10)
         
         # Format journal with colors and styling
         journal_text = f"\n{bold(colored('=== RECENT EVENTS ===', CYAN))}\n\n"

@@ -6,6 +6,7 @@ import os
 import sys
 import time
 from pathlib import Path
+import gc
 
 from text_formatter import format_story_text, bold, colored, underline, CYAN, GREEN, YELLOW, RED
 
@@ -21,6 +22,11 @@ class StoryEngine:
         self.current_game_id = None
         self.current_player = None
         self.story_log = []
+        self.input_handler = None  # Will be set by the input handler
+    
+    def set_input_handler(self, input_handler):
+        """Set the input handler reference."""
+        self.input_handler = input_handler
     
     def print_slow(self, text, delay=0.00):
         """Print text with a typing effect."""
@@ -112,8 +118,15 @@ class StoryEngine:
         if not self.current_game_id or not self.current_player:
             return "Error: No active game."
         
-        print("\n\n$$$$ Action: " + action)
+        #print("\n\n$$$$ Action: " + action)
 
+        # Update the previous event with the player's action
+        self.memory_manager.update_previous_event_action(
+            self.current_game_id,
+            self.current_round,
+            action
+        )
+        
         # Increment round
         self.current_round += 1
         
@@ -144,9 +157,9 @@ class StoryEngine:
             str(template_path) if template_path.exists() else None
         )
         
-        print("\n\n$$$$ Next segment:\n")
-        print(next_segment)
-        print("\n$$$$\n")
+        # print("\n\n$$$$ Next segment:\n")
+        # print(next_segment)
+        # print("\n$$$$\n")
 
         # Summarize the story
         summary = self.llm_client.summarize_story(
@@ -159,9 +172,9 @@ class StoryEngine:
             str(summary_template_path) if summary_template_path.exists() else None
         )
 
-        print("\n\n$$$$ Summary:\n")
-        print(summary)
-        print("\n$$$$\n")
+        # print("\n\n$$$$ Summary:\n")
+        # print(summary)
+        # print("\n$$$$\n")
 
         # Update game state with new situation and summary
         self.memory_manager.update_game_state(
@@ -172,12 +185,12 @@ class StoryEngine:
             summary         # Update the summary
         )
         
-        # Add the new segment as an event
+        # Add the new segment as an event (without player action yet)
         self.memory_manager.add_event(
             self.current_game_id,
             self.current_round,
             next_segment,
-            action
+            ""  # No player action for this event yet
         )
         
         # Extract potential NPCs and items
@@ -197,6 +210,11 @@ class StoryEngine:
         # Notify about new items if any
         if new_items:
             print("\nAdded to inventory: " + ", ".join(new_items))
+        
+        # Reset the expecting_choice flag in the input handler to ensure
+        # the next input will be validated as a choice
+        if self.input_handler:
+            self.input_handler.expecting_choice = True
         
         return next_segment
     

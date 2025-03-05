@@ -212,6 +212,12 @@ class Database:
         """Add a new event to the game history."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+
+        #print()
+        # print("+ Adding event: " + str(round_num))
+        # print("+ Description:" + description)
+        # print("+ Player action: " + player_action)
+
         
         cursor.execute(
             "INSERT INTO events (game_id, round, description, player_action) VALUES (?, ?, ?, ?)",
@@ -221,14 +227,31 @@ class Database:
         conn.commit()
         conn.close()
     
-    def get_recent_events(self, game_id, limit=5):
+    def update_event_action(self, game_id, round_num, player_action):
+        """Update an existing event with the player's action."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+#        print()
+        # print("+ Updating event action for round: " + str(round_num))
+        # print("+ Player action: " + player_action)
+        
+        cursor.execute(
+            "UPDATE events SET player_action = ? WHERE game_id = ? AND round = ?",
+            (player_action, game_id, round_num)
+        )
+        
+        conn.commit()
+        conn.close()
+    
+    def get_recent_events(self, game_id, limit=10):
         """Get recent events from the game history."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
         cursor.execute(
-            "SELECT * FROM events WHERE game_id = ? ORDER BY round ASC LIMIT ?",
+            "SELECT * FROM events WHERE game_id = ? ORDER BY round DESC LIMIT ?",
             (game_id, limit)
         )
         events = [dict(row) for row in cursor.fetchall()]

@@ -22,7 +22,12 @@ class MemoryManager:
         """Add a new event to the game history."""
         self.db.add_event(game_id, round_num, description, player_action)
     
-    def get_recent_events(self, game_id, limit=5):
+    def update_previous_event_action(self, game_id, current_round, player_action):
+        """Update the previous event with the player's action."""
+        # The previous event is the current_round before incrementing
+        self.db.update_event_action(game_id, current_round, player_action)
+    
+    def get_recent_events(self, game_id, limit=10):
         """Get recent events from the game history."""
         return self.db.get_recent_events(game_id, limit)
     
@@ -122,7 +127,7 @@ class MemoryManager:
         
         return []
     
-    def format_recent_events(self, game_id, limit=5):
+    def format_recent_events(self, game_id, limit=10):
         """Format recent events for display."""
         events = self.get_recent_events(game_id, limit)
         if not events:
