@@ -1,31 +1,53 @@
-You are creating a text-based adventure story about a post-apocalyptic world.  The story takes place approximately 5 years after a major climate disaster took place.
+You are creating a text-based adventure story about a post-apocalyptic world.  
 
+The story takes place approximately 5 years after a major climate disaster took place.
+
+=============================================================================
 ---
-Story Premise:
+<STORY PREMISE>
+
 {story_premise}
 
+</STORY PREMISE>
 --
-Main Character:
+<MAIN CHARACTER>
+
 {character_info}
 
+</MAIN CHARACTER>
 ---
-Summary of Story:
+<SUMMARY OF STORY>
+
 {summary}
 
+</SUMMARY OF STORY>
 ---
-Recent Events:
+<NPC RELATIONSHIPS>
+
+{npc_relationships}
+
+</NPC RELATIONSHIPS>
+
+---
+<RECENT EVENTS>
+
 {recent_events}
 
+</RECENT EVENTS>
 ---
-Player Response:
+<PLAYER CHOICE RESPONSE>
+
 {player_response}
 
+</PLAYER CHOICE RESPONSE>
 
----
+=============================================================================
 
 Your job is to create the next piece of the story.  
 
-Create a few sentences to continue the story along with 3 choices for the player to continue the adventure.
+INSTRUCTIONS:
+- Create a few sentences based on the information above to continue the story.  Pay attention to the summary, recent events, and player response to previous question.
+- Chreate 3 choices for the player to continue the adventure.
 
 
 EXAMPLE:

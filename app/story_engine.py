@@ -7,6 +7,8 @@ import sys
 import time
 from pathlib import Path
 
+from text_formatter import format_story_text, bold, colored, underline, CYAN, GREEN, YELLOW, RED
+
 class StoryEngine:
     """Manages story generation and progression."""
     
@@ -20,9 +22,15 @@ class StoryEngine:
         self.current_player = None
         self.story_log = []
     
-    def print_slow(self, text, delay=0.03):
+    def print_slow(self, text, delay=0.00):
         """Print text with a typing effect."""
-        for char in text:
+        # Make sure text is a string
+        if not isinstance(text, str):
+            text = str(text)
+            
+        # Apply text formatting before printing
+        formatted_text = format_story_text(text)
+        for char in formatted_text:
             sys.stdout.write(char)
             sys.stdout.flush()
             time.sleep(delay)
@@ -44,25 +52,6 @@ class StoryEngine:
             premise_template_path if premise_template_path.exists() else None
         )
         
-        # Update game state
-        self.memory_manager.update_game_state(
-            self.current_game_id,
-            self.current_round,
-            "Starting your journey in the wasteland."
-        )
-        
-        # Add the opening as the first event
-        self.memory_manager.add_event(
-            self.current_game_id,
-            self.current_round,
-            opening,
-            "begin the adventure"
-        )
-        
-        # Extract potential NPCs and items
-        self.memory_manager.extract_npcs_from_text(opening, self.current_game_id, self.current_round)
-        new_items = self.memory_manager.extract_items_from_text(opening, self.current_game_id)
-        
         # Display the opening
         self.print_slow(opening)
         
@@ -73,6 +62,47 @@ class StoryEngine:
             "action": "begin the adventure"
         })
         
+        # Update game state with story premise
+        self.memory_manager.update_game_state(
+            self.current_game_id,
+            self.current_round,
+            opening,  # current_situation
+            opening,  # story_premise
+            opening   # initial summary
+        )
+        
+        print('\n** Generating story segment **\n')
+        start = self.llm_client.generate_story_segment(
+            opening,                                    # story_premise
+            player.get('description', ''),              # character_description
+            opening,                                    # current_situation
+            [],                                         # recent_events
+            [],                                         # npc_relationships
+            "begin the adventure",                      # player_action
+            str(story_template_path) if story_template_path.exists() else None
+        )
+
+        self.print_slow(start)
+
+        # Update game state
+        self.memory_manager.update_game_state(
+            self.current_game_id,
+            self.current_round,
+            start
+        )
+    
+        self.memory_manager.add_event(
+            self.current_game_id,
+            self.current_round,
+            start,
+            "begin the adventure"
+        )
+        
+        # Extract potential NPCs and items
+        self.memory_manager.extract_npcs_from_text(opening, self.current_game_id, self.current_round)
+        new_items = self.memory_manager.extract_items_from_text(opening, self.current_game_id)
+        
+
         # Notify about new items if any
         if new_items:
             print("\nAdded to inventory: " + ", ".join(new_items))
@@ -82,12 +112,16 @@ class StoryEngine:
         if not self.current_game_id or not self.current_player:
             return "Error: No active game."
         
+        print("\n\n$$$$ Action: " + action)
+
         # Increment round
         self.current_round += 1
         
         # Get game state
         game_state = self.memory_manager.get_game_state(self.current_game_id)
         current_situation = game_state.get('current_situation', '')
+        story_premise = game_state.get('story_premise', '')
+        current_summary = game_state.get('current_summary', '')
         
         # Get recent events
         recent_events = self.memory_manager.get_recent_events(self.current_game_id)
@@ -97,23 +131,45 @@ class StoryEngine:
         
         # Get template path
         template_path = Path(os.path.dirname(os.path.abspath(__file__))).parent / "data" / "prompts" / "story_generation.txt"
-        
+        summary_template_path = Path(os.path.dirname(os.path.abspath(__file__))).parent / "data" / "prompts" / "summary.txt"
+
         # Generate the next story segment
         next_segment = self.llm_client.generate_story_segment(
+            story_premise,                              # story_premise
+            self.current_player.get('description', ''), # character_description
+            current_situation,                          # current_situation
+            recent_events,                              # recent_events
+            npcs,                                       # npc_relationships
+            action,                                     # player_action
+            str(template_path) if template_path.exists() else None
+        )
+        
+        print("\n\n$$$$ Next segment:\n")
+        print(next_segment)
+        print("\n$$$$\n")
+
+        # Summarize the story
+        summary = self.llm_client.summarize_story(
+            story_premise,
             self.current_player.get('description', ''),
-            current_situation,
+            current_summary,
             recent_events,
             npcs,
             action,
-            template_path if template_path.exists() else None
+            str(summary_template_path) if summary_template_path.exists() else None
         )
-        
-        # Update game state with new situation (use first paragraph as current situation)
-        new_situation = next_segment.split('\n\n')[0] if '\n\n' in next_segment else next_segment
+
+        print("\n\n$$$$ Summary:\n")
+        print(summary)
+        print("\n$$$$\n")
+
+        # Update game state with new situation and summary
         self.memory_manager.update_game_state(
             self.current_game_id,
             self.current_round,
-            new_situation
+            next_segment,
+            story_premise,  # Preserve the story premise
+            summary         # Update the summary
         )
         
         # Add the new segment as an event
@@ -198,21 +254,21 @@ class StoryEngine:
     
     def get_help_text(self):
         """Get help text for the game."""
-        help_text = """
-=== GAME HELP ===
+        help_text = f"""
+{bold(colored('=== GAME HELP ===', CYAN))}
 
-COMMANDS:
-- I or inventory: Check your inventory
-- J or journal: View your recent events
-- C or characters: See characters you've met
-- H or help: Display this help text
-- Q or quit: End the game
+{bold(colored('COMMANDS:', YELLOW))}
+- {bold('I')} or {bold('inventory')}: Check your inventory
+- {bold('J')} or {bold('journal')}: View your recent events
+- {bold('C')} or {bold('characters')}: See characters you've met
+- {bold('H')} or {bold('help')}: Display this help text
+- {bold('Q')} or {bold('quit')}: End the game
 
-GAMEPLAY:
+{bold(colored('GAMEPLAY:', YELLOW))}
 - Type your actions or choices to progress the story
 - Be creative with your responses
 - Your choices affect the story and relationships
 
-The world is yours to explore. Good luck!
+{colored('The world is yours to explore. Good luck!', GREEN)}
 """
         return help_text 

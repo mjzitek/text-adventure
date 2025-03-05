@@ -13,6 +13,7 @@ class Database:
         """Initialize the database."""
         self.db_path = db_path
         self._create_tables()
+        self._add_story_premise_column()
     
     def _create_tables(self):
         """Create database tables if they don't exist."""
@@ -38,6 +39,8 @@ class Database:
             player_id INTEGER,
             current_round INTEGER DEFAULT 1,
             current_situation TEXT,
+            story_premise TEXT,
+            current_summary TEXT,
             FOREIGN KEY (player_id) REFERENCES player(id)
         )
         ''')
@@ -79,6 +82,29 @@ class Database:
         ''')
         
         conn.commit()
+        conn.close()
+    
+    def _add_story_premise_column(self):
+        """Add story_premise column to game_state table if it doesn't exist."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Check if story_premise column exists in game_state table
+        cursor.execute("PRAGMA table_info(game_state)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        # Add story_premise column if it doesn't exist
+        if 'story_premise' not in columns:
+            print("Adding story_premise column to game_state table")
+            cursor.execute("ALTER TABLE game_state ADD COLUMN story_premise TEXT")
+            conn.commit()
+            
+        # Add current_summary column if it doesn't exist
+        if 'current_summary' not in columns:
+            print("Adding current_summary column to game_state table")
+            cursor.execute("ALTER TABLE game_state ADD COLUMN current_summary TEXT")
+            conn.commit()
+        
         conn.close()
     
     def create_player(self, name, background, traits, description=None):
@@ -127,7 +153,7 @@ class Database:
         conn.close()
         return player
     
-    def update_game_state(self, game_id, current_round=None, current_situation=None):
+    def update_game_state(self, game_id, current_round=None, current_situation=None, story_premise=None, current_summary=None):
         """Update the game state."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -142,6 +168,14 @@ class Database:
         if current_situation is not None:
             updates.append("current_situation = ?")
             params.append(current_situation)
+            
+        if story_premise is not None:
+            updates.append("story_premise = ?")
+            params.append(story_premise)
+            
+        if current_summary is not None:
+            updates.append("current_summary = ?")
+            params.append(current_summary)
         
         if updates:
             query = f"UPDATE game_state SET {', '.join(updates)} WHERE id = ?"
@@ -158,7 +192,18 @@ class Database:
         cursor = conn.cursor()
         
         cursor.execute("SELECT * FROM game_state WHERE id = ?", (game_id,))
-        state = dict(cursor.fetchone())
+        row = cursor.fetchone()
+        
+        if row:
+            state = dict(row)
+        else:
+            state = {
+                "id": game_id, 
+                "current_round": 1, 
+                "current_situation": "", 
+                "story_premise": "",
+                "current_summary": ""
+            }
         
         conn.close()
         return state
@@ -183,7 +228,7 @@ class Database:
         cursor = conn.cursor()
         
         cursor.execute(
-            "SELECT * FROM events WHERE game_id = ? ORDER BY round DESC LIMIT ?",
+            "SELECT * FROM events WHERE game_id = ? ORDER BY round ASC LIMIT ?",
             (game_id, limit)
         )
         events = [dict(row) for row in cursor.fetchall()]

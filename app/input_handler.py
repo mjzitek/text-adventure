@@ -2,6 +2,7 @@
 Input handler module for the text adventure game.
 Processes player input and commands.
 """
+from text_formatter import bold, colored, underline, CYAN, GREEN, YELLOW, RED
 
 class InputHandler:
     """Handles player input and commands."""
@@ -42,9 +43,19 @@ class InputHandler:
         """Show the player's inventory."""
         game_id = player.get('game_id')
         if not game_id:
-            return {"type": "error", "result": "No active game."}
+            return {"type": "error", "result": colored("No active game.", RED)}
         
-        inventory_text = self.memory_manager.format_inventory(game_id)
+        inventory = self.memory_manager.get_inventory(game_id)
+        
+        # Format inventory with colors and styling
+        inventory_text = f"\n{bold(colored('=== INVENTORY ===', CYAN))}\n\n"
+        
+        if not inventory:
+            inventory_text += "Your inventory is empty.\n"
+        else:
+            for item in inventory:
+                inventory_text += f"• {colored(item, GREEN)}\n"
+        
         print(inventory_text)
         
         return {"type": "inventory", "result": inventory_text}
@@ -53,9 +64,25 @@ class InputHandler:
         """Show the player's recent events."""
         game_id = player.get('game_id')
         if not game_id:
-            return {"type": "error", "result": "No active game."}
+            return {"type": "error", "result": colored("No active game.", RED)}
         
-        journal_text = self.memory_manager.format_recent_events(game_id)
+        events = self.memory_manager.get_recent_events(game_id, 5)
+        
+        # Format journal with colors and styling
+        journal_text = f"\n{bold(colored('=== RECENT EVENTS ===', CYAN))}\n\n"
+        
+        if not events:
+            journal_text += "No events recorded yet.\n"
+        else:
+            for i, event in enumerate(events, 1):
+                round_num = event.get('round', i)
+                text = event.get('text', '').split('\n\n')[0]  # Get first paragraph
+                action = event.get('action', '')
+                
+                journal_text += f"{bold(colored(f'Round {round_num}:', YELLOW))}\n"
+                journal_text += f"{text}\n"
+                journal_text += f"{underline('Your action:')} {action}\n\n"
+        
         print(journal_text)
         
         return {"type": "journal", "result": journal_text}
@@ -64,9 +91,23 @@ class InputHandler:
         """Show the characters the player has met."""
         game_id = player.get('game_id')
         if not game_id:
-            return {"type": "error", "result": "No active game."}
+            return {"type": "error", "result": colored("No active game.", RED)}
         
-        characters_text = self.memory_manager.format_npcs(game_id)
+        npcs = self.memory_manager.get_npcs(game_id)
+        
+        # Format characters with colors and styling
+        characters_text = f"\n{bold(colored('=== CHARACTERS ===', CYAN))}\n\n"
+        
+        if not npcs:
+            characters_text += "You haven't met any notable characters yet.\n"
+        else:
+            for npc in npcs:
+                name = npc.get('name', 'Unknown')
+                description = npc.get('description', '')
+                
+                characters_text += f"{bold(colored(name, GREEN))}\n"
+                characters_text += f"{description}\n\n"
+        
         print(characters_text)
         
         return {"type": "characters", "result": characters_text}
@@ -80,11 +121,11 @@ class InputHandler:
     
     def _quit_game(self, player):
         """Quit the game."""
-        print("\nAre you sure you want to end your adventure? (y/n)")
+        print(f"\n{colored('Are you sure you want to end your adventure? (y/n)', YELLOW)}")
         confirm = input("> ").lower().startswith('y')
         
         if confirm:
             return {"type": "quit", "end_game": True}
         else:
-            print("\nAdventure continues...\n")
+            print(f"\n{colored('Adventure continues...', GREEN)}\n")
             return {"type": "continue"} 

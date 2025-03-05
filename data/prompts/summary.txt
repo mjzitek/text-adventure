@@ -1,0 +1,22 @@
+You are creating a text-based adventure story about a post-apocalyptic world.  
+
+The story takes place approximately 5 years after a major climate disaster took place.
+
+=============================================================================
+
+Your job is to take the current story line and summarize it into a few paragraphes.
+
+Include key points of what is going on in the story line.
+
+<CURRENT_SUMMARY>
+
+{current_summary}
+
+</CURRENT_SUMMARY>
+
+
+<LATEST_EVENTS>
+
+{latest_events}
+
+</LATEST_EVENTS>

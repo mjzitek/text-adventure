@@ -31,7 +31,10 @@ class LLMClient:
         max_retries = 3
         retry_delay = 2
 
+        # Debugging
+        print('=' * 40)
         print(messages)
+        print('=' * 40)
         
         for attempt in range(max_retries):
             try:
@@ -42,7 +45,12 @@ class LLMClient:
                     max_tokens=max_tokens
                 )
                 
+                # Debugging
+                print('\n\n')
+                print('*' * 40)
                 print(response.choices[0].message.content)
+                print('*' * 40)
+                print('\n\n')
                 
                 return response.choices[0].message.content
             
@@ -81,16 +89,12 @@ class LLMClient:
         """Generate a story premise."""
         template = ""
         
-        print(template_path)
         if template_path and Path(template_path).exists():
             with open(template_path, 'r') as f:
                 template = f.read()
         else:
             template = ""
     
-
-        print(template)
-        print('-0--')
         prompt = template.format(
             character_info=character_info
         )
@@ -99,25 +103,57 @@ class LLMClient:
         
         return self.generate_text(prompt, system_prompt, temperature=0.7, max_tokens=2000) 
 
-    def generate_story_segment(self, character_description, current_situation, 
+
+    def summarize_story(self, story_premise, character_description, current_summary, 
                               recent_events, npc_relationships, player_action, 
                               template_path=None):
-        """Generate a story segment."""
+        """Summarize the story."""
         template = ""
+        print("+ Summarize the story. +")
         
-        if template_path and Path(template_path).exists():
+        if template_path and isinstance(template_path, str) and Path(template_path).exists():
+            print("+ Template path exists. +")
             with open(template_path, 'r') as f:
                 template = f.read()
         else:
             template = """
-    
+Summarize the story so far, incorporating the recent events. Create a cohesive narrative that captures the key elements of the story.
+
+Story Premise:
+{story_premise}
+
+Character Description:
+{character_description}
+
+Current Summary:
+{current_summary}
+
+Recent Events:
+{recent_events}
+
+NPC Relationships:
+{npc_relationships}
+
+Latest Player Action:
+{player_action}
+
+Create a comprehensive summary of the story so far:
 """
-        
+
         # Format recent events
         events_text = ""
         if recent_events:
             for event in recent_events:
-                events_text += f"- Round {event.get('round')}: {event.get('description')} (Player: {event.get('player_action')})\n"
+                # Make sure we're handling dictionary items properly
+                round_num = event.get('round', 'unknown')
+                description = event.get('description', '')
+                player_action = player_action
+                
+                # Use the first paragraph of the description if it's too long
+                # if description and '\n\n' in description:
+                #     description = description.split('\n\n')[0]
+                
+                events_text += f"\n**********\n **Round {round_num}:**\n {description} (Player Choice: {player_action})\n"
         else:
             events_text = "No previous events."
         
@@ -125,16 +161,96 @@ class LLMClient:
         npcs_text = ""
         if npc_relationships:
             for npc in npc_relationships:
-                npcs_text += f"- {npc.get('name')}: {npc.get('relationship')} - {npc.get('description')}\n"
+                # Make sure we're handling dictionary items properly
+                name = npc.get('name', 'Unknown')
+                relationship = npc.get('relationship', 'neutral')
+                description = npc.get('description', '')
+                
+                npcs_text += f"- {name}: {relationship} - {description}\n"
         else:
             npcs_text = "No established NPC relationships yet."
         
         prompt = template.format(
+            story_premise=story_premise,
             character_description=character_description,
-            current_situation=current_situation or "Starting your journey in the wasteland.",
+            current_summary=current_summary or "The story is just beginning.",
             recent_events=events_text,
             npc_relationships=npcs_text,
-            player_action=player_action
+            player_action=player_action,
+            latest_events=events_text
+        )
+        
+        system_prompt = "You are a writer who is an expert at summarizing complex narratives in a concise and engaging way."
+        
+        return self.generate_text(prompt, system_prompt, temperature=0.7, max_tokens=1000)
+
+    def generate_story_segment(self, story_premise, character_description, current_situation, 
+                              recent_events, npc_relationships, player_action, 
+                              template_path=None):
+        """Generate a story segment."""
+        template = ""
+        print("+ Generate a story segment. +")
+        print ("+ Story premise: " + story_premise[:30] if story_premise else "") # First 10 chars or empty string
+        print ("+ Character info: " + character_description[:30] if character_description else "") # First 10 chars or empty string
+        #print ("+ Current situation: " + current_situation[:10] if current_situation else "") # First 10 chars or empty string
+        
+        # Properly handle arrays of dictionaries
+        if recent_events:
+            print(f"+ Recent events: {len(recent_events)} events")
+        else:
+            print("+ Recent events: None")
+            
+        if npc_relationships:
+            print(f"+ NPC relationships: {len(npc_relationships)} NPCs")
+        else:
+            print("+ NPC relationships: None")
+            
+        print ("+ Player action: " + player_action[:40] if player_action else "") # First 10 chars or empty string
+        
+        # Ensure template_path is a string
+        if template_path and isinstance(template_path, str) and Path(template_path).exists():
+            with open(template_path, 'r') as f:
+                template = f.read()
+        else:
+            template = ""
+
+        # Format recent events
+        events_text = ""
+        if recent_events:
+            for event in recent_events:
+                # Make sure we're handling dictionary items properly
+                round_num = event.get('round', 'unknown')
+                description = event.get('description', '')
+                player_choice = event.get('player_action', '')
+                
+                # Use the first paragraph of the description if it's too long
+                # if description and '\n\n' in description:
+                #     description = description.split('\n\n')[0]
+                
+                events_text += f"\n**********\n **Round {round_num}:**\n {description} \n Player Choice: {player_choice}\n"
+        else:
+            events_text = "No previous events."
+        
+        # Format NPC relationships
+        npcs_text = ""
+        if npc_relationships:
+            for npc in npc_relationships:
+                # Make sure we're handling dictionary items properly
+                name = npc.get('name', 'Unknown')
+                relationship = npc.get('relationship', 'neutral')
+                description = npc.get('description', '')
+                
+                npcs_text += f"- {name}: {relationship} - {description}\n"
+        else:
+            npcs_text = "No established NPC relationships yet."
+        
+        prompt = template.format(
+            character_info=character_description,
+            story_premise=story_premise,
+            summary=current_situation or "Starting your journey in the wasteland.",
+            recent_events=events_text,
+            npc_relationships=npcs_text,
+            player_response=player_action
         )
         
         # Read system prompt if available
@@ -145,4 +261,4 @@ class LLMClient:
             with open(system_prompt_path, 'r') as f:
                 system_prompt = f.read()
         
-        return self.generate_text(prompt, system_prompt, temperature=0.7, max_tokens=800) 
+        return self.generate_text(prompt, system_prompt, temperature=0.7, max_tokens=2000) 

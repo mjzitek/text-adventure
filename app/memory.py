@@ -14,9 +14,9 @@ class MemoryManager:
         """Get the current game state."""
         return self.db.get_game_state(game_id)
     
-    def update_game_state(self, game_id, current_round=None, current_situation=None):
+    def update_game_state(self, game_id, current_round=None, current_situation=None, story_premise=None, current_summary=None):
         """Update the game state."""
-        self.db.update_game_state(game_id, current_round, current_situation)
+        self.db.update_game_state(game_id, current_round, current_situation, story_premise, current_summary)
     
     def add_event(self, game_id, round_num, description, player_action):
         """Add a new event to the game history."""

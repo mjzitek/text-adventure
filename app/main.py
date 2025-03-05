@@ -15,6 +15,7 @@ from memory import MemoryManager
 from input_handler import InputHandler
 from llm import LLMClient
 from db import Database
+from text_formatter import bold, colored, CYAN, YELLOW, format_story_text, format_markdown
 
 def clear_screen():
     """Clear the console screen."""
@@ -22,7 +23,14 @@ def clear_screen():
 
 def print_slow(text, delay=0.03):
     """Print text with a typing effect."""
-    for char in text:
+    # Make sure text is a string
+    if not isinstance(text, str):
+        text = str(text)
+        
+    # Apply text formatting
+    formatted_text = format_markdown(text)
+    
+    for char in formatted_text:
         sys.stdout.write(char)
         sys.stdout.flush()
         time.sleep(delay)
@@ -38,8 +46,9 @@ def display_title():
     ║                                                            ║
     ╚════════════════════════════════════════════════════════════╝
     """
-    print(title)
-    print_slow("In a world ravaged by climate disaster, your story begins...\n")
+    # Print the title with cyan color
+    print(colored(title, CYAN))
+    print_slow(bold("In a world ravaged by climate disaster, your story begins...") + "\n")
     time.sleep(1)
 
 def main():
